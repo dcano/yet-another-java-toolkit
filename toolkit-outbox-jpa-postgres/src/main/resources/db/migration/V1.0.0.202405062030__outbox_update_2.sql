@@ -1,0 +1,1 @@
+alter table outbox_schema.outbox add column aggregate_id varchar(100);

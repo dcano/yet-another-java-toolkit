@@ -1,0 +1,32 @@
+server:
+  port: 9091
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, flyway, info
+debezium:
+  connector-class: "io.debezium.connector.postgresql.PostgresConnector"
+  custom-props:
+    "[topic.prefix]": "embedded-debezium"
+    "[debezium.source.plugin.name]": "pgoutput"
+    "[plugin.name]": "pgoutput"
+  source-database-properties:
+    db-name: "${CDC_DB_NAME}"
+    hostname: "${CDC_HOST}"
+    user: "${CDC_DB_USER}"
+    password: "${CDC_DB_PASSWORD}"
+    port: 5432
+    server-name: "debezium-message-relay"
+    server-id: "debezium-message-relay-1"
+    outbox-table: "${CDC_OUTBOX_TABLE:outbox_schema.outbox}"
+    outbox-schema: ""
+  offset-storage:
+    type: "org.apache.kafka.connect.storage.MemoryOffsetBackingStore"
+    flush-interval: 3000
+    offset-props:
+      "[offset.flush.timeout.ms]": 1000
+      "[max.poll.records]": 1000
+cdc:
+  service-name: ${CDC_SERVICE_NAME}
