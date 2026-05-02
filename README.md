@@ -1,4 +1,4 @@
-# java-toolkit
+# yet-another-java-toolkit
 
 A Spring Boot multi-module toolkit for building event-driven microservices with event sourcing, CQRS, and CDC-based state propagation over PostgreSQL and RabbitMQ.
 
