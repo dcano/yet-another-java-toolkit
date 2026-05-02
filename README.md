@@ -2,7 +2,7 @@
 
 A Spring Boot multi-module toolkit for building event-driven microservices with event sourcing, CQRS, and CDC-based state propagation over PostgreSQL and RabbitMQ.
 
-[![Build and Publish](https://github.com/dcano/java-toolkit/actions/workflows/publish.yml/badge.svg)](https://github.com/dcano/java-toolkit/actions/workflows/publish.yml)
+[![Build and Publish](https://github.com/dcano/yet-another-java-toolkit/actions/workflows/publish.yml/badge.svg)](https://github.com/dcano/java-toolkit/actions/workflows/publish.yml)
 
 ## Overview
 
