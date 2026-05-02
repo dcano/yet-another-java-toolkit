@@ -169,8 +169,7 @@
         <repository>
             <id>github</id>
             <name>GitHub Packages</name>
-            <!-- Replace YOUR_GITHUB_USERNAME with your actual GitHub username -->
-            <url>https://maven.pkg.github.com/YOUR_GITHUB_USERNAME/java-toolkit</url>
+            <url>https://maven.pkg.github.com/dcano/java-toolkit</url>
         </repository>
     </distributionManagement>
 
