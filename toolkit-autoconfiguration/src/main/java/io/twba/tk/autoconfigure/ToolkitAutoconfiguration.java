@@ -6,6 +6,9 @@ import io.twba.tk.command.CommandBus;
 import io.twba.tk.command.CommandBusInProcess;
 import io.twba.tk.command.CommandHandler;
 import io.twba.tk.command.DomainCommand;
+import io.twba.tk.query.QueryBus;
+import io.twba.tk.query.QueryBusInProcess;
+import io.twba.tk.query.QueryHandler;
 import io.twba.tk.configure.ToolkitProperties;
 import io.twba.tk.core.DomainEventAppender;
 import io.twba.tk.core.TwbaTransactionManager;
@@ -38,6 +41,14 @@ public class ToolkitAutoconfiguration {
     @ConditionalOnProperty(prefix = "io.twba.tk.properties.event-sourcing", name = "type", havingValue = "postgres")
     public EventStore jdbcPostgresEventStore(DataSource dataSource, ObjectMapper objectMapper) throws SQLException {
         return new EventStoreJdbcPostgres(dataSource, objectMapper);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(QueryBus.class)
+    public QueryBusInProcess queryBus(List<QueryHandler<?, ?>> queryHandlers,
+                                      ToolkitProperties toolkitProperties,
+                                      @Autowired(required = false) MeterRegistry meterRegistry) {
+        return new QueryBusInProcess(queryHandlers, toolkitProperties, meterRegistry);
     }
 
     @Bean
