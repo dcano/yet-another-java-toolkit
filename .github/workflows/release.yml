@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Release type — determines the next development version after release'
+        description: 'Release type — patch keeps current version, minor/major bump it (e.g. 0.1.0-SNAPSHOT + major → 1.0.0)'
         required: true
         type: choice
         options:
@@ -41,14 +41,17 @@ jobs:
         id: versions
         run: |
           CURRENT=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout --no-transfer-progress)
-          RELEASE=${CURRENT%-SNAPSHOT}
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$RELEASE"
+          BASE=${CURRENT%-SNAPSHOT}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE"
 
           case "${{ inputs.release_type }}" in
-            major) NEXT="$((MAJOR + 1)).0.0-SNAPSHOT" ;;
-            minor) NEXT="${MAJOR}.$((MINOR + 1)).0-SNAPSHOT" ;;
-            patch) NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))-SNAPSHOT" ;;
+            major) RELEASE="$((MAJOR + 1)).0.0" ;;
+            minor) RELEASE="${MAJOR}.$((MINOR + 1)).0" ;;
+            patch) RELEASE="${MAJOR}.${MINOR}.${PATCH}" ;;
           esac
+
+          IFS='.' read -r R_MAJOR R_MINOR R_PATCH <<< "$RELEASE"
+          NEXT="${R_MAJOR}.${R_MINOR}.$((R_PATCH + 1))-SNAPSHOT"
 
           echo "current=$CURRENT"
           echo "release=$RELEASE"

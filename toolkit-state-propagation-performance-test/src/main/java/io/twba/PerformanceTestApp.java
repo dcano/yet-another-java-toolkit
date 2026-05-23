@@ -10,7 +10,6 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -58,7 +57,7 @@ public class PerformanceTestApp {
 
         @Override
         public void run() {
-            RestTemplate restTemplate = new RestTemplateBuilder().build();
+            RestTemplate restTemplate = new RestTemplate();
             String apiUrl = "http://localhost:9095/twba/course";
             final String requestJson = "{\n" +
                     "    \"id\": \"{{myCourseId}}\",\n" +
