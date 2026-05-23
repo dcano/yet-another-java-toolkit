@@ -1,6 +1,6 @@
 package io.twba.tk.cdc.outbox;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 import io.twba.tk.cdc.OutboxMessage;
 import io.twba.tk.cdc.OutboxProperties;
 import io.twba.tk.cdc.outbox.jpa.OutboxMessageEntity;
@@ -39,7 +39,7 @@ public class OutboxJpaTest {
     }
 
     @Test
-    public void shouldAppendMessageToOutbox() throws JsonProcessingException {
+    public void shouldAppendMessageToOutbox() throws JacksonException {
         OutboxMessage expectedMessage = randomOutboxMessage();
         outboxJpa.appendMessage(expectedMessage);
         verify(helper).save(outboxEntityCaptor.capture());

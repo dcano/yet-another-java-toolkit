@@ -1,6 +1,6 @@
 package io.twba.tk.eventsource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.twba.tk.core.DomainEventPayload;
 import io.twba.tk.core.Event;
 import org.flywaydb.core.Flyway;
@@ -61,7 +61,7 @@ public class EventStoreJdbcPostgresTest {
         try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password)) {
 
 
-            EventStoreJdbcPostgres eventStore = new EventStoreJdbcPostgres(conn, new ObjectMapper());
+            EventStoreJdbcPostgres eventStore = new EventStoreJdbcPostgres(conn, JsonMapper.builder().build());
 
             List<Event<? extends DomainEventPayload>> eventsToAppend = Arrays.asList(new Event<>(new TestEvent("1")),
                     new Event<>(new TestEvent("2")));

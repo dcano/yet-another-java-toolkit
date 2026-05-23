@@ -1,6 +1,6 @@
 package io.twba.tk.cdc.outbox;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.twba.tk.cdc.OutboxProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +17,8 @@ public class TestAppConfig {
 
 
     @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+    public JsonMapper objectMapper() {
+        return JsonMapper.builder().build();
     }
 
 }

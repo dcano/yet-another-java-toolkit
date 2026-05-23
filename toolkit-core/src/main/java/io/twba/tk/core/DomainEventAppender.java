@@ -1,7 +1,7 @@
 package io.twba.tk.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 import io.twba.tk.cdc.Outbox;
 import io.twba.tk.cdc.OutboxMessage;
 import io.twba.tk.command.DomainCommand;
@@ -18,11 +18,11 @@ public class DomainEventAppender {
 
     private final ThreadLocal<List<Event<? extends DomainEventPayload>>> eventsToPublish = new ThreadLocal<>();
     private final Outbox outbox;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
     private final ApplicationProperties applicationProperties;
 
 
-    public DomainEventAppender(Outbox outbox, ObjectMapper objectMapper, ApplicationProperties applicationProperties) {
+    public DomainEventAppender(Outbox outbox, JsonMapper objectMapper, ApplicationProperties applicationProperties) {
         this.outbox = outbox;
         this.objectMapper = objectMapper;
         this.applicationProperties = applicationProperties;
@@ -60,7 +60,7 @@ public class DomainEventAppender {
             String payload = objectMapper.writeValueAsString(event.getPayload());
             return new OutboxMessage(event.getId(), header, payload, event.eventType(), Instant.now().toEpochMilli(), event.partitionKey(), event.getTenantId(), event.correlationId().value(), event.getSource(), event.getAggregateId());
         }
-        catch (JsonProcessingException e) {
+        catch (JacksonException e) {
             throw new UnableToSerializeEventException(event.getPayload().getClass(), e);
         }
     }

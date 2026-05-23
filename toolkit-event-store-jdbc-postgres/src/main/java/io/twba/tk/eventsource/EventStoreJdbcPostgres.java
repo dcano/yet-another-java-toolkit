@@ -1,14 +1,14 @@
 package io.twba.tk.eventsource;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.ValueSerializer;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 import io.twba.tk.core.DomainEventPayload;
 import io.twba.tk.core.Event;
 import org.slf4j.Logger;
@@ -43,15 +43,15 @@ public class EventStoreJdbcPostgres implements EventStore, Closeable {
         ORDER BY event_stream_version ASC
         """;
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
     private final Connection connection;
 
-    public EventStoreJdbcPostgres(DataSource dataSource, ObjectMapper objectMapper) throws SQLException {
+    public EventStoreJdbcPostgres(DataSource dataSource, JsonMapper objectMapper) throws SQLException {
         this.objectMapper = ensureJavaTimeSupport(objectMapper);
         this.connection = dataSource.getConnection();
     }
 
-    public EventStoreJdbcPostgres(Connection connection, ObjectMapper objectMapper) throws SQLException {
+    public EventStoreJdbcPostgres(Connection connection, JsonMapper objectMapper) throws SQLException {
         this.objectMapper = ensureJavaTimeSupport(objectMapper);
         this.connection = connection;
     }
@@ -74,7 +74,7 @@ public class EventStoreJdbcPostgres implements EventStore, Closeable {
                 ps.addBatch();
             }
             ps.executeBatch();
-        } catch (SQLException | JsonProcessingException e) {
+        } catch (SQLException | JacksonException e) {
             throw new EventStoreException("Failed to append events to the event store", e);
         }
     }
@@ -104,7 +104,7 @@ public class EventStoreJdbcPostgres implements EventStore, Closeable {
             DomainEventPayload payload = (DomainEventPayload) objectMapper.readValue(payloadJson, payloadClass);
 
             return new Event<>(payload, eventType);
-        } catch (JsonProcessingException | ClassNotFoundException | ClassCastException e) {
+        } catch (JacksonException | ClassNotFoundException | ClassCastException e) {
             throw new EventStoreException("Failed to deserialize event of type: " + eventClassName, e);
         }
     }
@@ -119,31 +119,30 @@ public class EventStoreJdbcPostgres implements EventStore, Closeable {
         }
     }
 
-    private static ObjectMapper ensureJavaTimeSupport(ObjectMapper baseMapper) {
-        ObjectMapper mapper = (baseMapper == null) ? new ObjectMapper() : baseMapper.copy();
+    private static JsonMapper ensureJavaTimeSupport(JsonMapper baseMapper) {
+        JsonMapper.Builder builder = (baseMapper == null) ? JsonMapper.builder() : baseMapper.rebuild();
 
-        // Ensure Instant works even when jackson-datatype-jsr310 is not on the classpath.
+        // Ensure Instant works — registers an ISO-8601 serializer/deserializer via the builder.
         SimpleModule javaTimeFallback = new SimpleModule("java-time-fallback");
-        javaTimeFallback.addSerializer(Instant.class, new JsonSerializer<>() {
+        javaTimeFallback.addSerializer(Instant.class, new ValueSerializer<Instant>() {
             @Override
-            public void serialize(Instant value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            public void serialize(Instant value, JsonGenerator gen, SerializationContext serializers) throws JacksonException {
                 if (value == null) {
                     gen.writeNull();
                     return;
                 }
-                gen.writeString(value.toString()); // ISO-8601, e.g. "2026-02-08T12:34:56Z"
+                gen.writeString(value.toString());
             }
         });
-        javaTimeFallback.addDeserializer(Instant.class, new JsonDeserializer<>() {
+        javaTimeFallback.addDeserializer(Instant.class, new ValueDeserializer<Instant>() {
             @Override
-            public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException {
                 String text = p.getValueAsString();
                 return (text == null || text.isBlank()) ? null : Instant.parse(text);
             }
         });
 
-        mapper.registerModule(javaTimeFallback);
-        return mapper;
+        return builder.addModule(javaTimeFallback).build();
     }
 
 }

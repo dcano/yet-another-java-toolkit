@@ -1,6 +1,6 @@
 package io.twba.tk.autoconfigure;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.twba.tk.command.CommandBus;
 import io.twba.tk.command.CommandBusInProcess;
@@ -39,7 +39,7 @@ public class ToolkitAutoconfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "io.twba.tk.properties.event-sourcing", name = "type", havingValue = "postgres")
-    public EventStore jdbcPostgresEventStore(DataSource dataSource, ObjectMapper objectMapper) throws SQLException {
+    public EventStore jdbcPostgresEventStore(DataSource dataSource, JsonMapper objectMapper) throws SQLException {
         return new EventStoreJdbcPostgres(dataSource, objectMapper);
     }
 
