@@ -41,6 +41,7 @@ public class InstrumentationCommandHandlerDecorator implements CommandHandler<Do
             if (meterRegistry != null) {
                 Timer.builder("twba.command.execution")
                         .tag("command", command.getClass().getSimpleName())
+                        .publishPercentileHistogram(true)
                         .register(meterRegistry)
                         .record(elapsedNanos, TimeUnit.NANOSECONDS);
             }
