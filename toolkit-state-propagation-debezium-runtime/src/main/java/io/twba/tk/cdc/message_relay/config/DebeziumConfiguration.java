@@ -7,6 +7,10 @@ import io.twba.tk.cdc.DebeziumProperties;
 import io.twba.tk.cdc.MessagePublisher;
 import io.twba.tk.cdc.MessagePublisherRabbitMq;
 import io.twba.tk.cdc.MessageRelay;
+import io.twba.tk.cdc.MessageRelayProps;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -23,8 +27,15 @@ public class DebeziumConfiguration {
     }
 
     @Bean
-    public MessagePublisher messagePublisher(@Autowired RabbitTemplate rabbitTemplate) {
-        return new MessagePublisherRabbitMq(rabbitTemplate);
+    public MessagePublisher messagePublisher(@Autowired RabbitTemplate rabbitTemplate,
+                                             @Autowired ConnectionFactory connectionFactory,
+                                             @Autowired MessageRelayProps messageRelayProps) {
+        boolean returnsEnabled = messageRelayProps.isPublisherReturns();
+        // ReturnsCallback only fires when the connection factory has publisher returns enabled.
+        if (returnsEnabled && connectionFactory instanceof CachingConnectionFactory cachingConnectionFactory) {
+            cachingConnectionFactory.setPublisherReturns(true);
+        }
+        return new MessagePublisherRabbitMq(rabbitTemplate, returnsEnabled);
     }
 
     @Bean
@@ -34,7 +45,8 @@ public class DebeziumConfiguration {
     }
 
     @Bean
-    public CdcRecordChangeConsumer cdcRecordChangeConsumer(@Autowired MessagePublisher messagePublisher) {
-        return new CloudEventRecordChangeConsumer(messagePublisher);
+    public CdcRecordChangeConsumer cdcRecordChangeConsumer(@Autowired MessagePublisher messagePublisher,
+                                                           @Autowired(required = false) MeterRegistry meterRegistry) {
+        return new CloudEventRecordChangeConsumer(messagePublisher, meterRegistry);
     }
 }

@@ -7,6 +7,7 @@ import lombok.Getter;
 public class TwbaCloudEvent {
 
     public static final String CLOUD_EVENT_AMQP_BINDING_PREFIX = "cloudEvents_";
+    public static final String CLOUD_EVENT_TYPE = "type";
     public static final String CLOUD_EVENT_TENANT_ID = "tenantid";
     public static final String CLOUD_EVENT_PARTITION_KEY = "partitionkey";
     public static final String CLOUD_EVENT_TIMESTAMP = "eventepochtimestamp";

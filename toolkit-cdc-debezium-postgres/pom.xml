@@ -21,6 +21,11 @@
             <artifactId>toolkit-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>io.debezium</groupId>
             <artifactId>debezium-api</artifactId>
         </dependency>
