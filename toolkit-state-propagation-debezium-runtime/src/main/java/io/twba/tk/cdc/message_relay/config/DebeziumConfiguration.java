@@ -8,6 +8,7 @@ import io.twba.tk.cdc.MessagePublisher;
 import io.twba.tk.cdc.MessagePublisherRabbitMq;
 import io.twba.tk.cdc.MessageRelay;
 import io.twba.tk.cdc.MessageRelayProps;
+import io.twba.tk.cdc.OutboxCleaner;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -46,7 +47,8 @@ public class DebeziumConfiguration {
 
     @Bean
     public CdcRecordChangeConsumer cdcRecordChangeConsumer(@Autowired MessagePublisher messagePublisher,
-                                                           @Autowired(required = false) MeterRegistry meterRegistry) {
-        return new CloudEventRecordChangeConsumer(messagePublisher, meterRegistry);
+                                                           @Autowired(required = false) MeterRegistry meterRegistry,
+                                                           @Autowired OutboxCleaner outboxCleaner) {
+        return new CloudEventRecordChangeConsumer(messagePublisher, meterRegistry, outboxCleaner);
     }
 }

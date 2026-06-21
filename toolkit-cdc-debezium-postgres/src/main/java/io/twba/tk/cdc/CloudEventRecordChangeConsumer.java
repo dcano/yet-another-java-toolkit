@@ -20,14 +20,20 @@ public class CloudEventRecordChangeConsumer implements CdcRecordChangeConsumer {
     public static final String READ_COUNTER = "twba.outbox.messages.read";
 
     private final MessagePublisher messagePublisher;
+    private final OutboxCleaner outboxCleaner;
     private final Counter readCounter;
 
     public CloudEventRecordChangeConsumer(MessagePublisher messagePublisher) {
-        this(messagePublisher, null);
+        this(messagePublisher, null, null);
     }
 
     public CloudEventRecordChangeConsumer(MessagePublisher messagePublisher, MeterRegistry meterRegistry) {
+        this(messagePublisher, meterRegistry, null);
+    }
+
+    public CloudEventRecordChangeConsumer(MessagePublisher messagePublisher, MeterRegistry meterRegistry, OutboxCleaner outboxCleaner) {
         this.messagePublisher = messagePublisher;
+        this.outboxCleaner = outboxCleaner;
         this.readCounter = meterRegistry != null
                 ? Counter.builder(READ_COUNTER)
                     .description("Total outbox messages read from the database and relayed by the Debezium CDC consumer")
@@ -44,7 +50,6 @@ public class CloudEventRecordChangeConsumer implements CdcRecordChangeConsumer {
             if (readCounter != null) {
                 readCounter.increment();
             }
-            //TODO outbox table clean up
             String payload = cdcRecord.valueOf("payload");
             String uuid = cdcRecord.valueOf("uuid");
             String type = cdcRecord.valueOf("type");
@@ -70,6 +75,9 @@ public class CloudEventRecordChangeConsumer implements CdcRecordChangeConsumer {
 
             messagePublisher.publish(event);
 
+            if (outboxCleaner != null) {
+                outboxCleaner.deleteByUuid(uuid);
+            }
         }
         catch (Exception e) {
             throw new RuntimeException(e);

@@ -9,13 +9,19 @@ import java.util.Map;
 import static io.twba.tk.cdc.CloudEventRecordChangeConsumer.READ_COUNTER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 class CloudEventRecordChangeConsumerTest {
 
+    private static final String UUID = "11111111-1111-1111-1111-111111111111";
+
     private final MessagePublisher messagePublisher = mock(MessagePublisher.class);
+    private final OutboxCleaner outboxCleaner = mock(OutboxCleaner.class);
 
     @Test
     void countsReadMessagesWhenMeterRegistryProvided() {
@@ -37,10 +43,36 @@ class CloudEventRecordChangeConsumerTest {
         verify(messagePublisher).publish(org.mockito.ArgumentMatchers.any());
     }
 
+    @Test
+    void deletesOutboxRowAfterSuccessfulPublish() {
+        CloudEventRecordChangeConsumer consumer = new CloudEventRecordChangeConsumer(messagePublisher, null, outboxCleaner);
+
+        consumer.accept(cdcRecord());
+
+        verify(outboxCleaner).deleteByUuid(UUID);
+    }
+
+    @Test
+    void doesNotDeleteOutboxRowWhenPublishFails() {
+        doThrow(new RuntimeException("broker unavailable")).when(messagePublisher).publish(org.mockito.ArgumentMatchers.any());
+        CloudEventRecordChangeConsumer consumer = new CloudEventRecordChangeConsumer(messagePublisher, null, outboxCleaner);
+
+        assertThatThrownBy(() -> consumer.accept(cdcRecord())).isInstanceOf(RuntimeException.class);
+        verify(outboxCleaner, never()).deleteByUuid(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void worksWithNullCleaner() {
+        CloudEventRecordChangeConsumer consumer = new CloudEventRecordChangeConsumer(messagePublisher, null, null);
+
+        assertThatCode(() -> consumer.accept(cdcRecord())).doesNotThrowAnyException();
+        verify(messagePublisher).publish(org.mockito.ArgumentMatchers.any());
+    }
+
     private static CdcRecord cdcRecord() {
         Map<String, Object> values = new HashMap<>();
         values.put("payload", "{\"orderId\":\"o-1\"}");
-        values.put("uuid", "11111111-1111-1111-1111-111111111111");
+        values.put("uuid", UUID);
         values.put("type", "com.acme.orders.events.orderplaced");
         values.put("tenant_id", "tenant-1");
         values.put("aggregate_id", "agg-1");
