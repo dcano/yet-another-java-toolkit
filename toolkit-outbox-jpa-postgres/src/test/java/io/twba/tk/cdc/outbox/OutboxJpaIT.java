@@ -19,8 +19,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.NoSuchElementException;
 
 import static io.twba.tk.cdc.outbox.OutboxMessages.randomOutboxMessage;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Testcontainers
@@ -31,6 +33,9 @@ public class OutboxJpaIT {
 
     @Autowired
     public OutboxJpa outboxJpa;
+
+    @Autowired
+    public OutboxCleanerJpa outboxCleanerJpa;
 
     @Autowired
     public OutboxMessageRepositoryJpaHelper helper;
@@ -59,6 +64,22 @@ public class OutboxJpaIT {
                 () -> assertEquals(expectedMessage.epoch(), actualMessage.getEpoch()),
                 () -> assertEquals(expectedMessage.uuid(), actualMessage.getUuid()),
                 () -> assertNotNull(expectedMessage.payload(), actualMessage.getPayload()));
+    }
+
+    @Test
+    public void shouldDeleteOutboxRowAfterSuccessfulRelay() throws JacksonException {
+        OutboxMessage message = randomOutboxMessage();
+        outboxJpa.appendMessage(message);
+
+        outboxCleanerJpa.deleteByUuid(message.uuid());
+
+        assertFalse(helper.findById(message.uuid()).isPresent(), "Row must be deleted after relay");
+    }
+
+    @Test
+    public void shouldNotThrowWhenDeletingNonExistentRow() {
+        assertThatCode(() -> outboxCleanerJpa.deleteByUuid("non-existent-uuid"))
+                .doesNotThrowAnyException();
     }
 
 }

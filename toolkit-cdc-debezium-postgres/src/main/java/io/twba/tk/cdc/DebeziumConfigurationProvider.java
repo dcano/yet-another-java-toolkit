@@ -20,7 +20,7 @@ public class DebeziumConfigurationProvider {
                 .with("skipped.operations", "u,d,t")
                 .with("include.schema.changes", "false")
                 .with("table.include.list", properties.getSourceDatabaseProperties().getOutboxTable())
-                .with("snapshot.include.collection.list", properties.getSourceDatabaseProperties().getOutboxTable())
+                .with("snapshot.mode", "no_data")
                 .build();
     }
 

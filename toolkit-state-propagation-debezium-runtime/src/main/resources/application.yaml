@@ -23,10 +23,23 @@ debezium:
     outbox-table: "${CDC_OUTBOX_TABLE:outbox_schema.outbox}"
     outbox-schema: ""
   offset-storage:
-    type: "org.apache.kafka.connect.storage.MemoryOffsetBackingStore"
+    type: "io.debezium.storage.jdbc.offset.JdbcOffsetBackingStore"
     flush-interval: 3000
     offset-props:
       "[offset.flush.timeout.ms]": 1000
       "[max.poll.records]": 1000
+      "[offset.storage.jdbc.url]": "jdbc:postgresql://${CDC_HOST}:5432/${CDC_DB_NAME}"
+      "[offset.storage.jdbc.user]": "${CDC_DB_USER}"
+      "[offset.storage.jdbc.password]": "${CDC_DB_PASSWORD}"
+      "[offset.storage.jdbc.offset.table.name]": "outbox_schema.debezium_offset_storage"
 cdc:
   service-name: ${CDC_SERVICE_NAME}
+
+spring:
+  datasource:
+    url: "jdbc:postgresql://${CDC_HOST}:5432/${CDC_DB_NAME}"
+    username: "${CDC_DB_USER}"
+    password: "${CDC_DB_PASSWORD}"
+  jpa:
+    hibernate:
+      ddl-auto: validate
