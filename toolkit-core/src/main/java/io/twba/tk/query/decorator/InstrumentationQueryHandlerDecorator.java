@@ -41,6 +41,7 @@ public class InstrumentationQueryHandlerDecorator implements QueryHandler<Domain
                         if (meterRegistry != null) {
                             Timer.builder("twba.query.execution")
                                     .tag("query", query.getClass().getSimpleName())
+                                    .publishPercentileHistogram(true)
                                     .register(meterRegistry)
                                     .record(elapsedNanos, TimeUnit.NANOSECONDS);
                         }
