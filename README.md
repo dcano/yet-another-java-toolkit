@@ -454,3 +454,52 @@ Every push to `main` or `master` triggers the [publish workflow](.github/workflo
 ## License
 
 This project does not currently include a `LICENSE` file. Contact the repository owner for licensing terms before using in production.
+
+## Changelog
+
+### v2.1.0 — 2026-06-21
+
+#### Fixed
+- Delete outbox rows from the database after successful relay to prevent unbounded table growth
+- Use durable JDBC-backed Debezium offset storage so restarts do not replay already-relayed events
+
+#### Added
+- Percentile publication for `twba.query.execution` timer metrics
+
+---
+
+### v2.0.0 — 2026-06-14
+
+#### Added
+- AMQP reliability: publisher returns callback (`cdc.publisher-returns`) logs unroutable messages instead of dropping them silently
+- `ToolkitQueueBuilder` — creates a durable main queue wired to a dead-letter exchange/queue (`dlx.<queue>` / `dlq.<queue>`)
+- `EventRegistry` / `@EventDefinition` + `CloudEventMessageConverter` for typed consumer-side event deserialization
+- Percentile publication for `twba.command.execution` timer metrics
+
+---
+
+### v1.0.0 — 2026-05-23
+
+#### Breaking Changes
+- Migrated runtime to Spring Boot 4.0.6 and Jackson 3 — consuming services must upgrade their Spring Boot version and Jackson dependencies accordingly
+
+---
+
+### v0.0.3 — 2026-05-09
+
+#### Added
+- Domain query support: `QueryBus`, `QueryHandler`, and `twba.query.execution` Micrometer timer
+
+---
+
+### v0.0.2 — 2026-05-08
+
+#### Added
+- Command execution instrumentation: `twba.command.execution` Micrometer timer, enabled via `io.twba.tk.properties.instrumentation.enabled=true`
+
+---
+
+### v0.0.1 — 2026-05-02
+
+#### Added
+- Initial release: outbox pattern (JPA/PostgreSQL), JDBC event store, CDC via embedded Debezium, CQRS command bus with decorator pipeline, Spring Boot auto-configuration, Flyway-managed schemas
